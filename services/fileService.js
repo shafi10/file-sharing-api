@@ -1,8 +1,7 @@
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-
-const FOLDER = process.env.FOLDER || path.resolve(process.cwd(), "uploads");
+import { FOLDER } from "../config/index.js";
 
 // File component (encapsulates file operations)
 class FileService {
@@ -20,7 +19,10 @@ class FileService {
 
   static saveKeys(filename, keys) {
     const metaPath = path.join(FOLDER, `${keys.publicKey}.meta.json`);
-    fs.writeFileSync(metaPath, JSON.stringify({ filename, ...keys }));
+    fs.writeFileSync(
+      metaPath,
+      JSON.stringify({ filename, uploadDate: new Date(), ...keys })
+    );
   }
 
   static getFileByPublicKey(publicKey) {

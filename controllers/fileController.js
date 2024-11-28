@@ -2,8 +2,7 @@ import path from "path";
 import fs from "fs";
 import mime from "mime-types";
 import FileService from "../services/fileService.js";
-
-const FOLDER = process.env.FOLDER || path.resolve(process.cwd(), "uploads");
+import { FOLDER } from "../config/index.js";
 
 export const uploadNewFile = (req, res) => {
   try {

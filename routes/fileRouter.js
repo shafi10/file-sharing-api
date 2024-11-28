@@ -1,6 +1,5 @@
 import express from "express";
 import crypto from "crypto";
-import path from "path";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
 import {
@@ -8,8 +7,7 @@ import {
   removeExistingFile,
   uploadNewFile,
 } from "../controllers/fileController.js";
-
-const FOLDER = process.env.FOLDER || path.resolve(process.cwd(), "uploads");
+import { DOWNLOAD_LIMIT, FOLDER, UPLOAD_LIMIT } from "../config/index.js";
 
 // Multer setup for file uploads
 const storage = multer.diskStorage({
@@ -21,26 +19,26 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Rate limit setup for uploads and downloads
-const uploadLimit = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 1 day
-  max: 10, // Limit each IP to 100 requests per day
-  message: "Daily upload limit exceeded.",
+// Rate limiters
+const uploadLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: parseInt(UPLOAD_LIMIT),
+  message: "Upload limit exceeded",
 });
 
-const downloadLimit = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 1 day
-  max: 10, // Limit each IP to 200 requests per day
-  message: "Daily download limit exceeded.",
+const downloadLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: parseInt(DOWNLOAD_LIMIT),
+  message: "Download limit exceeded",
 });
 
 const router = express.Router();
 
 // POST /files - Upload new files
-router.post("/", uploadLimit, upload.single("file"), uploadNewFile);
+router.post("/", uploadLimiter, upload.single("file"), uploadNewFile);
 
 // GET /files/:publicKey - Download existing files
-router.get("/:publicKey", downloadLimit, downloadExistingFile);
+router.get("/:publicKey", downloadLimiter, downloadExistingFile);
 
 // DELETE /files/:privateKey - Remove existing files
 router.delete("/:privateKey", removeExistingFile);
