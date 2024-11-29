@@ -1,18 +1,23 @@
 import path from "path";
 import fs from "fs";
 import mime from "mime-types";
-import FileService from "../services/fileService.js";
-import { FOLDER } from "../config/index.js";
+import LocalFileService from "../services/localFileService.js";
+import { configPath, FOLDER, provider } from "../config/index.js";
+import GoogleCloudStorageService from "../services/googleCloudStorage.js";
 
-export const uploadNewFile = (req, res) => {
+const FileService =
+  provider === "google"
+    ? new GoogleCloudStorageService(configPath)
+    : LocalFileService;
+
+export const uploadNewFile = async (req, res) => {
   try {
     const file = req.file;
     if (!file) {
       return res.status(400).json({ error: "No file uploaded." });
     }
-
-    const keys = FileService.generateKeys(file.filename);
-    FileService.saveKeys(file.filename, keys);
+    const keys = await FileService.generateKeys(file.filename);
+    FileService.saveKeys(file.filename, keys, file);
 
     res.json({ publicKey: keys.publicKey, privateKey: keys.privateKey });
   } catch (error) {

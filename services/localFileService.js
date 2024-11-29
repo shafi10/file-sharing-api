@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { FOLDER } from "../config/index.js";
 
 // File component (encapsulates file operations)
-class FileService {
+class LocalFileService {
   static generateKeys(filename) {
     const publicKey = crypto
       .createHash("sha256")
@@ -51,4 +51,4 @@ class FileService {
   }
 }
 
-export default FileService;
+export default LocalFileService;
