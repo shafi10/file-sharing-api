@@ -1,6 +1,5 @@
 import { Storage } from "@google-cloud/storage";
 import crypto from "crypto";
-import path from "path";
 import fs from "fs";
 
 // Google Cloud Storage provider component
@@ -32,36 +31,40 @@ class GoogleCloudStorageService {
   }
 
   async saveKeys(filename, keys, file) {
-    try {
-      const metadata = {
-        filename,
-        uploadDate: new Date().toISOString(),
-        ...keys,
-      };
-      const metaFileName = `${keys.publicKey}.meta.json`;
-      const metaFile = this.bucket.file(metaFileName);
-      const uploadedFile = this.bucket.file(filename);
-      await uploadedFile.save(file.buffer || fs.readFileSync(file.path), {
-        contentType: file.mimetype || "application/octet-stream",
-      });
-      await metaFile.save(JSON.stringify(metadata), {
-        contentType: "application/json",
-      });
-    } catch (error) {
-      console.log("🚀 ~ GoogleCloudStorageService ~ saveKeys ~ error:", error);
-    }
+    const metadata = {
+      filename,
+      uploadDate: new Date().toISOString(),
+      ...keys,
+    };
+    const metaFileName = `${keys.publicKey}.meta.json`;
+    const metaFile = this.bucket.file(metaFileName);
+    const uploadedFile = this.bucket.file(filename);
+    await uploadedFile.save(file.buffer || fs.readFileSync(file.path), {
+      contentType: file.mimetype || "application/octet-stream",
+    });
+    await metaFile.save(JSON.stringify(metadata), {
+      contentType: "application/json",
+    });
   }
 
   async getFileByPublicKey(publicKey) {
     const metaFileName = `${publicKey}.meta.json`;
     const metaFile = this.bucket.file(metaFileName);
 
-    if (await metaFile.exists()) {
-      const [metadataContent] = await metaFile.download();
-      return JSON.parse(metadataContent);
+    // Check if the metadata file exists
+    const [exists] = await metaFile.exists();
+    if (!exists) {
+      console.error(`Metadata file not found: ${metaFileName}`);
+      return null;
     }
 
-    return null;
+    const [metadataContent] = await metaFile.download();
+    const metadata = JSON.parse(metadataContent);
+
+    // Construct file path
+    const filePath = this.bucket.file(metadata?.filename);
+
+    return { metadata, filePath };
   }
 
   async deleteFileByPrivateKey(privateKey) {

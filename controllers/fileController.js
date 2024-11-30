@@ -1,14 +1,15 @@
-import path from "path";
 import fs from "fs";
+import crypto from "crypto";
 import mime from "mime-types";
 import LocalFileService from "../services/localFileService.js";
-import { configPath, FOLDER, provider } from "../config/index.js";
+import { configPath, provider } from "../config/index.js";
 import GoogleCloudStorageService from "../services/googleCloudStorage.js";
+import { uniqueSuffix } from "../utils/index.js";
 
 const FileService =
   provider === "google"
     ? new GoogleCloudStorageService(configPath)
-    : LocalFileService;
+    : new LocalFileService();
 
 export const uploadNewFile = async (req, res) => {
   try {
@@ -16,8 +17,10 @@ export const uploadNewFile = async (req, res) => {
     if (!file) {
       return res.status(400).json({ error: "No file uploaded." });
     }
-    const keys = await FileService.generateKeys(file.filename);
-    FileService.saveKeys(file.filename, keys, file);
+    const uniqueFileName = `${uniqueSuffix}-${file?.originalname}`;
+    const fileName = provider === "google" ? uniqueFileName : file.filename;
+    const keys = await FileService.generateKeys(fileName);
+    await FileService.saveKeys(fileName, keys, file);
 
     res.json({ publicKey: keys.publicKey, privateKey: keys.privateKey });
   } catch (error) {
@@ -26,35 +29,51 @@ export const uploadNewFile = async (req, res) => {
   }
 };
 
-export const downloadExistingFile = (req, res) => {
+export const downloadExistingFile = async (req, res) => {
   const { publicKey } = req.params;
-  const metadata = FileService.getFileByPublicKey(publicKey);
 
-  if (!metadata) {
-    return res.status(404).json({ error: "Something went wrong." });
+  if (!publicKey) {
+    return res.status(400).json({ error: "Public key is required" });
   }
+  try {
+    // Retrieve file info using the public key
+    const fileInfo = await FileService.getFileByPublicKey(publicKey);
 
-  const filePath = path.join(FOLDER, metadata.filename);
+    if (!fileInfo) {
+      return res.status(404).json({ error: "File not found" });
+    }
 
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: "File not found" });
+    // Determine the MIME type of the file
+    const mimeType =
+      mime.lookup(fileInfo?.metadata?.filename) || "application/octet-stream";
+
+    // Set the correct headers for file download
+    res.setHeader("Content-Type", mimeType);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileInfo?.metadata?.filename}"`
+    );
+
+    let fileStream = null;
+    if (provider === "google") {
+      // Stream the file to the response
+      fileStream = fileInfo?.filePath?.createReadStream();
+    } else {
+      // Stream the file to the response
+      fileStream = fs.createReadStream(fileInfo?.filePath);
+      // Pipe the file stream to the response object
+    }
+    // Handle file stream errors
+    fileStream.on("error", (err) => {
+      console.error("Error streaming file:", err.message);
+      return res.status(500).json({ error: "Error streaming the file" });
+    });
+
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error("Error in downloadExistingFile:", error.message);
+    return res.status(500).json({ error: "An internal server error occurred" });
   }
-  // Determine the MIME type of the file
-  const mimeType = mime.lookup(filePath);
-  if (!mimeType) {
-    return res.status(400).json({ error: "Unable to determine file type" });
-  }
-
-  // Set the correct headers for file download
-  res.setHeader("Content-Type", mimeType);
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename="${path.basename(filePath)}"`
-  ); // To prompt download
-
-  // Stream the file to the response
-  const fileStream = fs.createReadStream(filePath);
-  fileStream.pipe(res); // Pipe the file stream to the response object
 };
 
 export const removeExistingFile = (req, res) => {

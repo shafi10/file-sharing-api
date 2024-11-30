@@ -7,16 +7,24 @@ import {
   removeExistingFile,
   uploadNewFile,
 } from "../controllers/fileController.js";
-import { DOWNLOAD_LIMIT, FOLDER, UPLOAD_LIMIT } from "../config/index.js";
+import {
+  DOWNLOAD_LIMIT,
+  FOLDER,
+  provider,
+  UPLOAD_LIMIT,
+} from "../config/index.js";
+import { uniqueSuffix } from "../utils/index.js";
 
 // Multer setup for file uploads
-const storage = multer.diskStorage({
-  destination: FOLDER,
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${crypto.randomUUID()}`;
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
-  },
-});
+const storage =
+  provider === "google"
+    ? multer.memoryStorage()
+    : multer.diskStorage({
+        destination: FOLDER,
+        filename: (req, file, cb) => {
+          cb(null, `${uniqueSuffix}-${file.originalname}`);
+        },
+      });
 const upload = multer({ storage });
 
 // Rate limiters

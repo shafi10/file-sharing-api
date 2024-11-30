@@ -5,7 +5,7 @@ import { FOLDER } from "../config/index.js";
 
 // File component (encapsulates file operations)
 class LocalFileService {
-  static generateKeys(filename) {
+  async generateKeys(filename) {
     const publicKey = crypto
       .createHash("sha256")
       .update(filename)
@@ -17,7 +17,7 @@ class LocalFileService {
     return { publicKey, privateKey };
   }
 
-  static saveKeys(filename, keys) {
+  async saveKeys(filename, keys) {
     const metaPath = path.join(FOLDER, `${keys.publicKey}.meta.json`);
     fs.writeFileSync(
       metaPath,
@@ -25,16 +25,18 @@ class LocalFileService {
     );
   }
 
-  static getFileByPublicKey(publicKey) {
+  async getFileByPublicKey(publicKey) {
     const metaPath = path.join(FOLDER, `${publicKey}.meta.json`);
     if (fs.existsSync(metaPath)) {
       const metadata = JSON.parse(fs.readFileSync(metaPath));
-      return metadata;
+      const filePath = path.join(FOLDER, metadata.filename);
+      return { metadata, filePath };
     }
+    console.log("falknfjlajf lakflaj");
     return null;
   }
 
-  static deleteFileByPrivateKey(privateKey) {
+  async deleteFileByPrivateKey(privateKey) {
     const metaFiles = fs
       .readdirSync(FOLDER)
       .filter((file) => file.endsWith(".meta.json"));
