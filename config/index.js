@@ -11,6 +11,6 @@ export const INACTIVITY_PERIOD = parseInt(
   10
 ); // In days
 export const CLEANUP_CRON_SCHEDULE =
-  process.env.CLEANUP_CRON_SCHEDULE || "0 0 * * *";
+  process.env.CLEANUP_CRON_SCHEDULE || "*/1 * * * *";
 export const provider = process.env.PROVIDER || "local";
 export const configPath = process.env.CONFIG;
