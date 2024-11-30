@@ -23,9 +23,11 @@ app.use("/files", fileRouter);
 
 // Schedule cleanup job
 schedule.scheduleJob(CLEANUP_CRON_SCHEDULE, async () => {
-  console.log("Running scheduled cleanup...");
   await cleanupFiles();
 });
+
+// Export the app to be used in tests
+export default app;
 
 // Start the server
 app.listen(PORT, () => {
