@@ -1,5 +1,4 @@
 import { Storage } from "@google-cloud/storage";
-import crypto from "crypto";
 import fs from "fs";
 
 // Google Cloud Storage provider component
@@ -16,18 +15,6 @@ class GoogleCloudStorageService {
       keyFilename: config.keyFilename,
     });
     this.bucket = this.storage.bucket(this.bucketName);
-  }
-
-  async generateKeys(filename) {
-    const publicKey = crypto
-      .createHash("sha256")
-      .update(filename)
-      .digest("hex");
-    const privateKey = crypto
-      .createHash("sha256")
-      .update(`${filename}-${Date.now()}`)
-      .digest("hex");
-    return { publicKey, privateKey };
   }
 
   async saveKeys(filename, keys, file) {

@@ -1,22 +1,9 @@
 import fs from "fs";
 import path from "path";
-import crypto from "crypto";
 import { FOLDER } from "../config/index.js";
 
 // File component (encapsulates file operations)
 class LocalFileService {
-  async generateKeys(filename) {
-    const publicKey = crypto
-      .createHash("sha256")
-      .update(filename)
-      .digest("hex");
-    const privateKey = crypto
-      .createHash("sha256")
-      .update(`${filename}-${Date.now()}`)
-      .digest("hex");
-    return { publicKey, privateKey };
-  }
-
   async saveKeys(filename, keys) {
     const metaPath = path.join(FOLDER, `${keys.publicKey}.meta.json`);
     fs.writeFileSync(

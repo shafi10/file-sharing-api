@@ -1,15 +1,16 @@
 import fs from "fs";
-import crypto from "crypto";
 import mime from "mime-types";
-import LocalFileService from "../services/localFileService.js";
-import { configPath, provider } from "../config/index.js";
-import GoogleCloudStorageService from "../services/googleCloudStorage.js";
 import { uniqueSuffix } from "../utils/index.js";
+import FileStorageService from "../services/fileStorageService.js";
+import { configPath, provider, FOLDER } from "../config/index.js";
 
-const FileService =
-  provider === "google"
-    ? new GoogleCloudStorageService(configPath)
-    : new LocalFileService();
+const config = {
+  PROVIDER: provider, // "local" or "googleCloud"
+  CONFIG: configPath, // Path to Google Cloud configuration
+  FOLDER: FOLDER, // Path to local storage folder
+};
+
+const FileService = new FileStorageService(config);
 
 export const uploadNewFile = async (req, res) => {
   try {
