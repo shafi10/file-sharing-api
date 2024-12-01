@@ -66,3 +66,28 @@ Below are the configuration settings used by the file-sharing API:
 ---
 
 Make sure to configure these environment variables in your `.env` file or directly in your server environment to match your setup and requirements.
+
+### `INSTALLATION`
+
+`npm install`
+
+- **Description**: Installs all the dependencies listed in your project's package.json file. It's recommended to use Node.js version v22.11.0 for optimal compatibility and performance.
+- **Usage**: Run the command to install all required dependencies.
+
+---
+
+### `START THE PROJECT`
+
+`npm start`
+
+- **Description**: Runs the startup script defined in the `package.json` file.
+- **Usage**: Run the command to start the application.
+
+---
+
+### `RUN TEST CASE`
+
+`npm test`
+
+- **Description**: Runs the test scripts defined in the `package.json` file.
+- **Usage**: Run the command to execute the test suite.

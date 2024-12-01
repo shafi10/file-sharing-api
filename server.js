@@ -1,7 +1,6 @@
 import "dotenv/config";
 // Import statements using ES Modules
 import express from "express";
-import fs from "fs";
 import fileRouter from "./routes/fileRouter.js";
 import { CLEANUP_CRON_SCHEDULE, FOLDER, PORT } from "./config/index.js";
 import { cleanupFiles } from "./cron/index.js";
@@ -12,11 +11,6 @@ const app = express();
 
 // Middleware to parse JSON
 app.use(express.json());
-
-// Ensure FOLDER exists
-if (!fs.existsSync(FOLDER)) {
-  fs.mkdirSync(FOLDER, { recursive: true });
-}
 
 // API Endpoints
 app.use("/files", fileRouter);

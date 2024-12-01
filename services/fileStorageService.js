@@ -3,12 +3,15 @@ import GoogleCloudStorageService from "./googleCloudStorage.js";
 import LocalFileService from "./localFileService.js";
 import crypto from "crypto";
 
+// Class to handle file storage logic based on the selected provider
 class FileStorageService {
   constructor(config) {
     this.provider = config.PROVIDER;
     if (this.provider === "google") {
+      // If Google provider is selected, instantiate GoogleCloudStorageService
       this.service = new GoogleCloudStorageService(config.CONFIG);
     } else if (this.provider === "local") {
+      // If Local provider is selected, instantiate LocalFileService
       this.service = new LocalFileService();
       this.folder = config.FOLDER;
       if (!fs.existsSync(this.folder)) {
